@@ -11,11 +11,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Horth.Service.Email.Shared"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Horth.Service.Email", "src\Horth.Service.Email\Horth.Service.Email.csproj", "{A7DCBFCF-31D6-4469-9EB6-273D79DEF5A1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Horth.Service.Email.Queue", "src\Horth.Service.Email.Queue\Horth.Service.Email.Queue.csproj", "{35E95863-5AB4-4166-BE83-9E87DD82AC38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Horth.Service.Email.Queue", "src\Horth.Service.Email.Queue\Horth.Service.Email.Queue.csproj", "{35E95863-5AB4-4166-BE83-9E87DD82AC38}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Horth.Service.Email.TestClient", "test\Horth.Service.Email.TestClient\Horth.Service.Email.TestClient.csproj", "{C0BCC870-CDC7-4A96-9C74-3499C4C16F1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Horth.Service.Email.TestClient", "test\Horth.Service.Email.TestClient\Horth.Service.Email.TestClient.csproj", "{C0BCC870-CDC7-4A96-9C74-3499C4C16F1B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{67D81034-5713-4671-ABE7-DB2B9EE315D4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Horth.Shared.Infrastructure", "src\Horth.Shared.Infrastructure\Horth.Shared.Infrastructure.csproj", "{B612AD56-029A-46BE-8B85-53534F4BD59E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Horth.Shared.Message.Queue", "src\Horth.Shared.Message.Queue\Horth.Shared.Message.Queue.csproj", "{92E5BC65-73C4-498A-B54C-C216E11CED84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +51,14 @@ Global
 		{C0BCC870-CDC7-4A96-9C74-3499C4C16F1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0BCC870-CDC7-4A96-9C74-3499C4C16F1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0BCC870-CDC7-4A96-9C74-3499C4C16F1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B612AD56-029A-46BE-8B85-53534F4BD59E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B612AD56-029A-46BE-8B85-53534F4BD59E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B612AD56-029A-46BE-8B85-53534F4BD59E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B612AD56-029A-46BE-8B85-53534F4BD59E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{92E5BC65-73C4-498A-B54C-C216E11CED84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{92E5BC65-73C4-498A-B54C-C216E11CED84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{92E5BC65-73C4-498A-B54C-C216E11CED84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{92E5BC65-73C4-498A-B54C-C216E11CED84}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

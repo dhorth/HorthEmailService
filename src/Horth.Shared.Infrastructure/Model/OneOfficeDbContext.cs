@@ -1,5 +1,4 @@
-﻿using Irc.Infrastructure.Services.Queue;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Horth.Service.Email.Shared.Model
 {
