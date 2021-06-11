@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <UserSecretsId>6b380067-3cb4-4bb3-bd1a-3f18cff47bd1</UserSecretsId>
+  </PropertyGroup>
+
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\Horth.Service.Email.Queue\Horth.Service.Email.Queue.csproj" />
+    <ProjectReference Include="..\Horth.Service.Email.Scheduler\Horth.Service.Email.Scheduler.csproj" />
+    <ProjectReference Include="..\Horth.Service.Email.Shared\Horth.Service.Email.Shared.csproj" />
+  </ItemGroup>
+
+
+
+
+</Project>
