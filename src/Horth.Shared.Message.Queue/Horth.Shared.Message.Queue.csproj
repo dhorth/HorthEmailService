@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -16,11 +16,8 @@
     </Content>
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\Horth.Shared.Infrastructure\Horth.Shared.Infrastructure.csproj" />
-    <ProjectReference Include="..\Horth.Shared.Message.Queue\Horth.Shared.Message.Queue.csproj" />
   </ItemGroup>
-
 
 </Project>

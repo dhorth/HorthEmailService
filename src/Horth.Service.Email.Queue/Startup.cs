@@ -2,6 +2,7 @@ using System;
 using Horth.Service.Email.Service;
 using Horth.Service.Email.Shared.Configuration;
 using Horth.Service.Email.Shared.MsgQueue;
+using Horth.Service.Email.Shared.Service;
 using Irc.Infrastructure.Services.Queue;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,6 +17,7 @@ namespace Horth.Service.Email.Queue
             services.AddSingleton<IIrcMessageQueueService, RabbitMessageQueueService>();
             services.AddSingleton<IrcMessageQueueReceiver, RabbitMessageQueueReceiver>();
 
+            services.AddSingleton<IEmailService, EmailService>();
             services.AddHostedService<EmailReceiver>();
             services.AddSingleton<IPop3MailClient, Pop3MailClient>();
             switch (appSettings.EmailService)

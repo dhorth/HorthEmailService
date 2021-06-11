@@ -1,11 +1,6 @@
-using System;
 using System.IO;
-using Horth.Service.Email.Queue.Model;
 using Horth.Service.Email.Shared.Configuration;
-using Horth.Service.Email.Shared.Model;
-using Horth.Service.Email.Shared.MsgQueue;
 using Horth.Service.Email.Shared.Service;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -28,11 +23,6 @@ namespace Horth.Service.Email.Shared
 
             //services.AddSingleton<IIrcMessageQueueService, IrcMessageQueueService>();
 
-            services.AddDbContext<MessageQueueDbContext>(options => options.UseSqlite(appSettings.ConnectionString));
-
-            services.AddScoped<IMessageQueueMessageUnitOfWork, MessageQueueMessageUnitOfWork>();
-
-            services.AddSingleton<IEmailService, EmailService>();
         }
 
     }

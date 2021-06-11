@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Horth.Service.Email.Shared\Horth.Service.Email.Shared.csproj" />
+    <ProjectReference Include="..\Horth.Shared.Infrastructure\Horth.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
