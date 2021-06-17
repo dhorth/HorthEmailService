@@ -21,6 +21,7 @@ namespace Horth.Service.Email.Model
         }
         public OneOfficeMailMessage(List<string> to, string subject, string body):base()
         {
+            Id = Guid.NewGuid().ToString();
             To = new List<string>(to);
             Cc = new List<string>();
             Bcc = new List<string>();
@@ -28,7 +29,8 @@ namespace Horth.Service.Email.Model
             Body = body;
         }
 
-        public int Id { get; set; }
+        public string Id { get; set; }
+
         public string From { get; set; }
 
         //public string From { get; set; }
@@ -41,6 +43,8 @@ namespace Horth.Service.Email.Model
         public List<string> Bcc { get; set; }
 
         public ICollection<OneOfficeMailAttachment> Attachments { get; set; }
+
+        public string Addresses => string.Join(", ", To.ToArray()) + " CC: "+ string.Join(", ", Cc.ToArray()) + " BCC: " + string.Join(", ", Bcc.ToArray());
     }
 
     public class OneOfficeMailAttachment

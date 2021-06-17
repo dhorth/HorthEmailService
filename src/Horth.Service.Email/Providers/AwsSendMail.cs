@@ -23,6 +23,7 @@ namespace Horth.Service.Email.Queue
 
         public override void SendMail(MimeMessage msg)
         {
+            Log.Logger.Debug($"SendMail({msg.MessageId})");
             var credentials = new BasicAWSCredentials(AppSettings.AWSUsername, AppSettings.AWSPassword);
 
             // might want to provide credentials
@@ -32,8 +33,6 @@ namespace Horth.Service.Email.Queue
                 to.Add(t.Name);
 
             var rawMessage = new RawMessage();
-
-
             Task.Run(async () =>
             {
                 await using (var ms = new MemoryStream())
@@ -46,6 +45,8 @@ namespace Horth.Service.Email.Queue
                         Destinations = to,
                         RawMessage = rawMessage
                     };
+
+                    Log.Logger.Debug($"SendRawEmailAsync using AWS");
                     var sendResult = await ses.SendRawEmailAsync(email);
                     var rc = sendResult.HttpStatusCode == HttpStatusCode.OK;
                     if (rc)
@@ -61,6 +62,7 @@ namespace Horth.Service.Email.Queue
                 }
 
             });
+            Log.Logger.Information($"SendMail({msg.MessageId})");
         }
 
     }

@@ -17,9 +17,9 @@ namespace Horth.Service.Email.Service
 
         public override void SendMail(MimeMessage msg)
         {
-            throw new NotImplementedException();
             try
             {
+                throw new NotImplementedException();
                 using var client = new SmtpClient();
 
                 client.Connect(AppSettings.SmtpServer, AppSettings.SmtpPort);

@@ -61,7 +61,6 @@ namespace Horth.Service.Email.Shared.Configuration
         public EmailServiceProvider EmailService => GetEnumValue<EmailServiceProvider>("Email:Service", "Smtp");
 
         public string SourceEmail => GetValue("Email:SourceEmail", "");
-        public string Cc => GetValue("Email:Cc", "");
 
         public string SmtpServer => GetValue("Email:SmtpServer", "smtp.gmail.com");
         public int SmtpPort => GetValue<int>("Email:SmtpPort", 465);

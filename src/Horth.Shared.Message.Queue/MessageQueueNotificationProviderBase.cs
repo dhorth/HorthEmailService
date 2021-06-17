@@ -108,23 +108,24 @@ namespace Horth.Service.Email.Shared.MsgQueue
 
         }
 
-        internal bool EventNotification(IrcMessageQueueMessage msg, bool failOnDeliveryException=false)
+        internal bool EventNotification(IrcMessageQueueMessage msg, bool failOnDeliveryException = false)
         {
             var rc = false;
-                foreach (var observer in _observers)
+            foreach (var observer in _observers)
+            {
+                try
                 {
-                    try
-                    {
-                        observer.OnNext((T)msg);
-                        Log.Debug($"EventNotification...");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error($"EventNotification...", ex);
-                        if (failOnDeliveryException)
-                            throw new IrcMessageQueueDeliveryException($"Failed to process message {msg.Id}", ex);
-                    }
+                    observer.OnNext((T)msg);
+                    Log.Debug($"EventNotification...");
+                    rc = true;
                 }
+                catch (Exception ex)
+                {
+                    Log.Error($"EventNotification...", ex);
+                    if (failOnDeliveryException)
+                        throw new IrcMessageQueueDeliveryException($"Failed to process message {msg.Id}", ex);
+                }
+            }
 
             return rc;
         }

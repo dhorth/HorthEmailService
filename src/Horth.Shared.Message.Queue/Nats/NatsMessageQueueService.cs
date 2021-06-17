@@ -24,11 +24,12 @@ namespace Horth.Service.Email.Shared.MsgQueue
     {
         protected IConnection MessageService;
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IrcMessageQueueMessage.MsgService queue;
         public NatsMessageQueueService(AppSettings appSettings, IServiceScopeFactory scopeFactory):base(appSettings)
         {
             _scopeFactory = scopeFactory;
         }
-        protected override async Task<bool> InitAsync()
+        protected override async Task<bool> InitAsync(IrcMessageQueueMessage.MsgService queue)
         {
             try
             {
@@ -61,16 +62,16 @@ namespace Horth.Service.Email.Shared.MsgQueue
             base.Dispose();
         }
 
-        protected override  async Task PublishMessage(string serviceName, byte[] payload, IrcMessageQueueMessage msg)
+        protected override  async Task PublishMessage(byte[] payload, IrcMessageQueueMessage msg)
         {
             try
             {
-                Log.Logger.Debug($"Nats Publish Message {msg.serviceName}");
+                Log.Logger.Debug($"Nats Publish Message {queue}");
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-                    var dbMsg=await db.MessageQueueMessage.GetFirstAsync(a=> a.serviceName == msg.Service.ToString() && a.Id==msg.Id);
+                    var dbMsg=await db.MessageQueueMessage.GetFirstAsync(a=> a.serviceName == queue.ToString() && a.Id==msg.Id);
                     if (dbMsg == null)
                     {
                         db.MessageQueueMessage.Add(msg);
@@ -88,8 +89,8 @@ namespace Horth.Service.Email.Shared.MsgQueue
                 }
 
                 Log.Logger.Debug($"Nats Publish message ({msg.Id})");
-                MessageService.Publish(msg.Service.ToString(), Encoding.UTF8.GetBytes(msg.Id.ToString()));
-                Log.Logger.Information($"Nats Publish {msg.Service} Id: {msg.Id}");
+                MessageService.Publish(queue.ToString(), Encoding.UTF8.GetBytes(msg.Id.ToString()));
+                Log.Logger.Information($"Nats Publish {queue} Id: {msg.Id}");
             }
             catch (Exception ex)
             {
@@ -104,19 +105,19 @@ namespace Horth.Service.Email.Shared.MsgQueue
                 Log.Logger.Debug($"Nats Failed Message {msg.serviceName} {msg.Id}");
 
                 if (MessageService == null)
-                    await InitAsync();
+                    await InitAsync(msg.Service);
 
                 using (var scope = _scopeFactory.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-                    var dbMsg = await db.MessageQueueMessage.GetAsync(a => a.serviceName == msg.Service.ToString() && a.Id == msg.Id);
+                    var dbMsg = await db.MessageQueueMessage.GetAsync(a => a.serviceName == queue.ToString() && a.Id == msg.Id);
                     dbMsg.RetryCount = -1;
                     dbMsg.LastTry = DateTime.Now;
                     db.Save();
                     Log.Logger.Debug($"Nats marked message ({msg.Id}) as failed");
                 }
 
-                Log.Logger.Information($"Nats Failed {msg.serviceName} Id: {msg.Id}");
+                Log.Logger.Information($"Nats Failed {queue} Id: {msg.Id}");
             }
             catch (Exception ex)
             {
@@ -124,54 +125,58 @@ namespace Horth.Service.Email.Shared.MsgQueue
             }
         }
 
-        protected  async Task<IList<IrcMessageQueueMessage>> GetAllMessages(string queue)
+        protected  async Task<IList<IrcMessageQueueMessage>> GetAllMessages(IrcMessageQueueMessage.MsgService queue)
         {
             Log.Logger.Debug($"GetAllMessages({queue})");
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-            var ret = await db.MessageQueueMessage.GetAllAsync(a => a.serviceName == queue);
+            var ret = await db.MessageQueueMessage.GetAllAsync(a => a.serviceName == queue.ToString());
             Log.Logger.Information($"GetAllMessages({queue}) => {ret.Count}");
             return ret;
         }
-        protected async Task<IList<int>> GetMessageList(string serviceName)
+        protected async Task<IList<string>> GetMessageList(IrcMessageQueueMessage.MsgService serviceName)
         {
             Log.Logger.Debug($"GetMessageList({serviceName})");
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-            var messages = await db.MessageQueueMessage.GetAllAsync(a => a.serviceName == serviceName);
+            var messages = await db.MessageQueueMessage.GetAllAsync(a => a.serviceName == serviceName.ToString());
             var ret = messages.Select(a => a.Id).ToList();
             Log.Logger.Information($"GetMessageList({serviceName}) => {ret.Count}");
             return ret;
         }
-        protected async Task<IrcMessageQueueMessage> GetMessage(string serviceName, int id)
+        protected async Task<IrcMessageQueueMessage> GetMessage(IrcMessageQueueMessage.MsgService serviceName, string id)
         {
             Log.Logger.Debug($"GetMessage({serviceName}, {id})");
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-            var ret = await db.MessageQueueMessage.GetAsync(a => a.serviceName == serviceName && a.Id == id);
+            var ret = await db.MessageQueueMessage.GetAsync(a => a.serviceName == serviceName.ToString() && a.Id == id);
             Log.Logger.Information($"GetMessage({serviceName}, {id}) -> {ret.Id}");
             return ret;
         }
 
-        protected async Task RemoveMessage(string serviceName, int id)
+        protected async Task RemoveMessage(IrcMessageQueueMessage.MsgService serviceName, string id)
         {
             Log.Logger.Debug($"RemoveMessage({serviceName}, {id})");
 
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-            await db.MessageQueueMessage.RemoveAsync(a => a.serviceName == serviceName && a.Id == id);
+            await db.MessageQueueMessage.RemoveAsync(a => a.serviceName == serviceName.ToString() && a.Id == id);
             Log.Logger.Information($"RemoveMessage({serviceName}, {id}) -> TRUE");
         }
-        protected override async Task RemoveAllMessages(string queue)
+        protected override async Task RemoveAllMessages()
         {
             Log.Logger.Debug($"RemoveAllMessages({queue})");
             using var scope = _scopeFactory.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<IMessageQueueMessageUnitOfWork>();
-            await db.MessageQueueMessage.RemoveRangeAsync(a => a.serviceName == queue);
+            await db.MessageQueueMessage.RemoveRangeAsync(a => a.serviceName == queue.ToString());
             Log.Logger.Debug($"RemoveAllMessages({queue}) -> TRUE");
         }
 
-        public async Task<T> Get<T>(string serviceName, int id) where T : IIrcMessageQueuePayload
+        public override Task<List<IrcMessageQueueMessage>> GetDeadLetterQueue()
+        {
+            throw new NotImplementedException();
+        }
+        public async Task<T> Get<T>(IrcMessageQueueMessage.MsgService serviceName, string id) where T : IIrcMessageQueuePayload
         {
             Log.Logger.Debug($"Get({serviceName}, {id})");
             var ret = default(T);
@@ -186,7 +191,7 @@ namespace Horth.Service.Email.Shared.MsgQueue
 
             return ret;
         }
-        public async Task<IList<T>> GetAll<T>(string serviceName) where T : IIrcMessageQueuePayload
+        public async Task<IList<T>> GetAll<T>(IrcMessageQueueMessage.MsgService serviceName) where T : IIrcMessageQueuePayload
         {
             Log.Logger.Debug($"GetAll({serviceName})");
             var messages = await GetAllMessages(serviceName);

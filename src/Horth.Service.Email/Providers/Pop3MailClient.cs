@@ -26,6 +26,7 @@ namespace Horth.Service.Email.Service
         }
         public async Task<List<OneOfficeMailMessage>> GetMessages()
         {
+            Log.Logger.Debug("GetMessages()");
             var ret = new List<OneOfficeMailMessage>();
             try
             {
@@ -39,8 +40,10 @@ namespace Horth.Service.Email.Service
                     return ret;
 
                 var list = await _pop3.GetMessagesAsync(0, _pop3.Count);
+                Log.Logger.Information($"Found {list.Count} messages to process");
                 foreach (var message in list)
                 {
+                    Log.Logger.Debug($"Processing Message From {message.From} - {message.Subject}");
                     var body = message.HtmlBody;
                     var text = message.Body.ToString();
                     if (text.StartsWith(textKey))
@@ -49,9 +52,10 @@ namespace Horth.Service.Email.Service
                         var idx = body.IndexOf("inline", StringComparison.Ordinal) + 6;
                         if (idx > 5)
                             body = $"<html><body>{body.Substring(idx)}</body></html>";
-                        //Log.Logger.Warning($"Replacing body text with msg={body}");
+                        Log.Logger.Warning($"Replacing body text with msg={body}");
                     }
-                    //Log.Logger.Information($"Front Office Message #: {message.Subject}  Body: {body}");
+                    
+                    Log.Logger.Debug($"Office Message #: {message.Subject}  Body: {body}");
                     if (string.IsNullOrWhiteSpace(body))
                     {
                         body = text;
@@ -60,6 +64,7 @@ namespace Horth.Service.Email.Service
 
                     var m = new OneOfficeMailMessage
                     {
+                        Id=Guid.NewGuid().ToString(),
                         Subject = message.Subject,
                         Body = body,
                         From = message.From.First().Name,
@@ -76,6 +81,8 @@ namespace Horth.Service.Email.Service
                     ret.Add(m);
 
                     m.Attachments = new List<OneOfficeMailAttachment>();
+
+                    Log.Logger.Information($"Adding {message.Attachments.Count()} attachments to the email");
                     foreach (var a in message.Attachments)
                     {
                         string attachment;
@@ -97,12 +104,14 @@ namespace Horth.Service.Email.Service
                             //await a.WriteToAsync(ms);
                             attachment = Convert.ToBase64String(ms.ToArray());
                         }
+
                         m.Attachments.Add(new OneOfficeMailAttachment
                         {
                             FileName = a.ContentId,
                             MimeContent = a.ContentType.ToString(),
                             FileData = attachment
                         });
+                        Log.Logger.Debug($"Added {a.ContentId} attachment");
                     }
                 }
 
@@ -113,6 +122,7 @@ namespace Horth.Service.Email.Service
                 Log.Logger.Error(ex, "Check Email");
                 ret = null;
             }
+            Log.Logger.Information($"GetMessages() => {ret.Count}");
             return ret;
         }
         public void Dispose()

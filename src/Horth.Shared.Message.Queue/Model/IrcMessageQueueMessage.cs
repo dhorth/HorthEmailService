@@ -4,7 +4,7 @@ namespace Irc.Infrastructure.Services.Queue
 {
     public interface IIrcMessageQueuePayload
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
     }
     public class IrcMessageQueueMessage
     {
@@ -19,13 +19,14 @@ namespace Irc.Infrastructure.Services.Queue
         }
         public IrcMessageQueueMessage(MsgService service, string from, string payload)
         {
+            Id = Guid.NewGuid().ToString();
             Service = service;
             Created=DateTime.Now;
             From = from;
             Payload = payload;
             RetryCount = 0;
         }
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string serviceName { get; set; }
 
         public MsgService Service

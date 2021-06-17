@@ -38,35 +38,9 @@ namespace Horth.Service.Email.Controllers
         {
             Log.Logger.Debug($"Calling GetAll()");
             var ret = await _db.Email.GetAllAsync();
-            Log.Logger.Information($"GetAll()=>{ret.Count()}");
+            Log.Logger.Information($"GetAll() => {ret.Count()}");
             return Ok(ret);
         }
-
-        //[HttpGet("api/v1/[action]")]
-        //[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        //[ProducesResponseType((int)HttpStatusCode.NotFound)]
-        //[ProducesResponseType(typeof(IEnumerable<OneOfficeMailMessage>), (int)HttpStatusCode.OK)]
-        //public async Task<ActionResult<IEnumerable<OneOfficeMailMessage>>> GetQueue()
-        //{
-        //    Log.Logger.Debug($"Calling GetQueue()");
-        //    var ret=new List<OneOfficeMailMessage>();
-        //    try
-        //    {
-        //        var msgs = await _messageQueueService.GetAll(IrcMessageQueueMessage.MsgService.Email.ToString());
-        //        //convert the message payload to a OneOfficeMailMessage
-        //        foreach (var msg in msgs)
-        //        {
-        //            var mailMessage = new OneOfficeMailMessage(msg);
-        //            ret.Add(mailMessage);
-        //        }
-        //        Log.Logger.Information($"GetQueue()=>{ret.Count()}");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Log.Error(ex, "GetQueue");
-        //    }
-        //    return Ok(ret);
-        //}
 
         [HttpGet("api/v1/[action]")]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -78,7 +52,23 @@ namespace Horth.Service.Email.Controllers
             var ret = await _pop3Client.GetMessages();
             if (ret == null)
                 return Problem();
-            Log.Logger.Debug($"CheckMail()=>{ret.Count()}");
+            Log.Logger.Information($"CheckMail() => {ret.Count()}");
+            return Ok(ret);
+        }
+
+
+        [HttpGet("api/v1/[action]")]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(IEnumerable<OneOfficeMailMessage>), (int)HttpStatusCode.OK)]
+        public async Task<IActionResult> GetFailedMessages()
+        {
+            Log.Logger.Debug($"Calling GetFailedMessages()");
+            var msgs = await _messageQueueService.GetFailures(IrcMessageQueueMessage.MsgService.Email);
+            if (msgs == null)
+                return Problem();
+            var ret = msgs.Select(a => new OneOfficeMailMessage(a));
+            Log.Logger.Information($"GetFailedMessages() => {ret.Count()}");
             return Ok(ret);
         }
 
@@ -86,55 +76,19 @@ namespace Horth.Service.Email.Controllers
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
         [ProducesResponseType(typeof(bool), (int)HttpStatusCode.OK)]
-        public async Task<IActionResult> TestSend(string to)
+        public async Task<IActionResult> TestSend()
         {
             Log.Logger.Debug($"Calling TestSend()");
             var ooMsg = new OneOfficeMailMessage(
-                new List<string> { to },
+                new List<string> { AppSettings.MailMonitor },
                 "Email Receiver Startup",
                 "<h1>Email Service Started</h1><p>Ready to Receive Messages</p>");
 
             var msg = new IrcMessageQueueMessage(IrcMessageQueueMessage.MsgService.Email,Request.Host.ToString(),JsonConvert.SerializeObject(ooMsg));
             await _messageQueueService.Publish(msg);
+            Log.Logger.Information($"TestSend() => true");
             return Ok(true);
         }
-
-        //[HttpPost("api/v1/[action]")]
-        //[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        //[ProducesResponseType((int)HttpStatusCode.NotFound)]
-        //[ProducesResponseType(typeof(bool), (int)HttpStatusCode.OK)]
-        //public async Task<IActionResult> ProcessQueue()
-        //{
-        //    Log.Logger.Debug($"Calling ProcessQueue()");
-        //    await _messageQueueService.Process(IrcMessageQueueMessage.MsgService.Email.ToString());
-        //    Log.Logger.Information($"ProcessQueue()=>true");
-        //    return Ok(true);
-        //}
-
-        //[HttpPost("api/v1/[action]")]
-        //[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        //[ProducesResponseType((int)HttpStatusCode.NotFound)]
-        //[ProducesResponseType(typeof(IEnumerable<OneOfficeMailMessage>), (int)HttpStatusCode.OK)]
-        //public async Task<IActionResult> FlushQueue()
-        //{
-        //    Log.Logger.Debug($"Calling FlushQueue()");
-        //    var ret = await _messageQueueService.GetAll(IrcMessageQueueMessage.MsgService.Email.ToString());
-        //    await _messageQueueService.RemoveAll(IrcMessageQueueMessage.MsgService.Email.ToString());
-        //    Log.Logger.Information($"FlushQueue()=>{ret.Count()}");
-        //    return Ok(true);
-        //}
-
-        //[HttpPost("api/v1/[action]")]
-        //[ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        //[ProducesResponseType((int)HttpStatusCode.NotFound)]
-        //[ProducesResponseType(typeof(IEnumerable<OneOfficeMailMessage>), (int)HttpStatusCode.OK)]
-        //public async Task<IActionResult> RemoveMessage(int msgId)
-        //{
-        //    Log.Logger.Debug($"Calling RemoveMessage({msgId})");
-        //    await _messageQueueService.Remove(IrcMessageQueueMessage.MsgService.Email.ToString(), msgId);
-        //    Log.Logger.Information($"RemoveMessage({msgId})=>true");
-        //    return Ok(true);
-        //}
 
     }
 }

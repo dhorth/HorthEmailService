@@ -27,11 +27,11 @@ namespace Horth.Service.Email.Shared.MsgQueue
         //Task Failed(IrcMessageQueueMessage msg);
         //Task Process(string serviceName);
 
-        //Task<IList<IrcMessageQueueMessage>> GetAll(string serviceName);
+        Task<List<IrcMessageQueueMessage>> GetFailures(IrcMessageQueueMessage.MsgService serviceName);
         //Task<IList<int>> GetList(string serviceName);
         //Task<IrcMessageQueueMessage> Get(string serviceName, int id);
         //Task Remove(string serviceName, int id);
-        Task RemoveAll(string serviceName);
+        Task RemoveAll(IrcMessageQueueMessage.MsgService serviceName);
 
         //Task<IList<T>> GetAll<T>(string queue) where T : IIrcMessageQueuePayload;
         //Task<T> Get<T>(string queue, int id) where T : IIrcMessageQueuePayload;
@@ -52,12 +52,6 @@ namespace Horth.Service.Email.Shared.MsgQueue
             AppSettings = appSettings;
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
-        {
-            //Do the migration asynchronously
-            await InitAsync();
-        }
-
 
         public virtual void Dispose()
         {
@@ -73,14 +67,14 @@ namespace Horth.Service.Email.Shared.MsgQueue
                     throw new IrcDataException("Missing service name");
 
                 if (!IsInitialized)
-                    await InitAsync();
+                    await InitAsync(msg.Service);
 
                 Log.Logger.Debug($"Publish message ({msg.Id})");
                 var json = JsonConvert.SerializeObject(msg);
                 var message = Encoding.UTF8.GetBytes(json);
-                await PublishMessage(msg.serviceName, message, msg);
+                await PublishMessage(message, msg);
 
-                Log.Logger.Information($"Publish {msg.Service} Id: {msg.Id}");
+                Log.Logger.Information($"Publish Service: {msg.Service} Id: {msg.Id}");
             }
             catch (Exception ex)
             {
@@ -168,22 +162,34 @@ namespace Horth.Service.Email.Shared.MsgQueue
         //    Log.Logger.Information($"Remove({serviceName}, {id}) -> TRUE");
         //}
 
-        public async Task RemoveAll(string serviceName)
+        public async Task RemoveAll(IrcMessageQueueMessage.MsgService serviceName)
         {
             Log.Logger.Debug($"RemoveAll({serviceName})");
-            await RemoveAllMessages(serviceName);
+            if (!IsInitialized)
+                await InitAsync(serviceName);
+            await RemoveAllMessages();
             Log.Logger.Debug($"RemoveAll({serviceName}) -> TRUE");
         }
 
+        public async Task<List<IrcMessageQueueMessage>> GetFailures(IrcMessageQueueMessage.MsgService serviceName)
+        {
+            Log.Logger.Debug($"GetFailures({serviceName})");
+            if (!IsInitialized)
+                await InitAsync(serviceName);
 
-        protected abstract Task<bool> InitAsync();
-        protected abstract Task PublishMessage(string queue, byte[] payload, IrcMessageQueueMessage msg);
+            var ret=await GetDeadLetterQueue();
+            Log.Logger.Debug($"GetFailures({serviceName}) -> {ret.Count}");
+            return ret;
+        }
+
+        protected abstract Task<bool> InitAsync(IrcMessageQueueMessage.MsgService queue);
+        protected abstract Task PublishMessage(byte[] payload, IrcMessageQueueMessage msg);
         //protected abstract Task<IList<IrcMessageQueueMessage>> GetAllMessages(string queue);
         //protected abstract Task<IList<int>> GetMessageList(string serviceName);
         //protected abstract Task<IrcMessageQueueMessage> GetMessage(string serviceName, int id);
         //protected abstract Task RemoveMessage(string serviceName, int id);
-        protected abstract Task RemoveAllMessages(string queue);
+        protected abstract Task RemoveAllMessages();
 
-
+        public abstract Task<List<IrcMessageQueueMessage>> GetDeadLetterQueue();
     }
 }

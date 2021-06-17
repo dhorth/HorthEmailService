@@ -9,7 +9,8 @@ namespace Horth.Service.Email.Shared.Exceptions
 {
     public class IrcMessageQueueDeliveryException:IrcException
     {
-        public IrcMessageQueueDeliveryException(string message, Exception innerException)
+
+        public IrcMessageQueueDeliveryException(string message, Exception innerException=null)
             : base(message, innerException)
         {
             Log.Logger.Error(innerException, message);

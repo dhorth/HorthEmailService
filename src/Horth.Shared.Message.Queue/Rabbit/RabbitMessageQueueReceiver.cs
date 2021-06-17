@@ -39,7 +39,7 @@ namespace Irc.Infrastructure.Services.Queue
             return Task.CompletedTask;
         }
 
-        public override void Initialize(string queueName)
+        public override void Initialize(IrcMessageQueueMessage.MsgService queueName)
         {
             try
             {
@@ -89,7 +89,10 @@ namespace Irc.Infrastructure.Services.Queue
                         var json = Encoding.UTF8.GetString(ea.Body.ToArray());
                         var msg = JsonConvert.DeserializeObject<IrcMessageQueueMessage>(json);
                         var rc = HandleMessage(msg);
-                        ch.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                        if(rc)
+                            ch.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
+                        else
+                            ch.BasicNack(ea.DeliveryTag, false, false);
                     }
                     catch (IrcMessageQueueDeliveryException ex)
                     {

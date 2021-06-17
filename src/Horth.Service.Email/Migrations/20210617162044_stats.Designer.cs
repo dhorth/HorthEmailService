@@ -3,14 +3,16 @@ using System;
 using Horth.Service.Email.Model;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Horth.Service.Email.Migrations
 {
     [DbContext(typeof(EmailServiceDbContext))]
-    partial class EmailServiceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210617162044_stats")]
+    partial class stats
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

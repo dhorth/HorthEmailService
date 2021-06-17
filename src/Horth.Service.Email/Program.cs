@@ -1,5 +1,6 @@
 using System;
 using Horth.Service.Email.Shared;
+using Horth.Shared.Infrastructure.Configuration;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ namespace Horth.Service.Email
         public static readonly string AppName = "EmailService";
         public static int Main(string[] args)
         {
-            var configuration = WebHostHelper.GetConfiguration();
+            var configuration = ConfigurationHelper.GetConfiguration();
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(configuration)
                 .CreateLogger();

@@ -27,7 +27,7 @@ namespace Irc.Infrastructure.Services.Queue
         public Action MessageHandler { get; set; }
         public bool FailOnException { get; set; }
 
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public  Task StartAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -38,6 +38,7 @@ namespace Irc.Infrastructure.Services.Queue
             {
                 Log.Logger.Error(ex, "StartAsync");
             }
+            return Task.FromResult(true);
         }
 
         public virtual Task StopAsync(CancellationToken cancellationToken)
@@ -45,12 +46,12 @@ namespace Irc.Infrastructure.Services.Queue
             Log.Logger.Information($"MQ Receiver Stop");
             return Task.CompletedTask;
         }
-        public virtual void Initialize(string queue)
+        public virtual void Initialize(IrcMessageQueueMessage.MsgService queue)
         {
             try
             {
                 Log.Logger.Debug($"MQ Receiver Constructor");
-                _eventSubscribers = new MessageQueueNotificationProviderBase<IrcMessageQueueMessage>(queue);
+                _eventSubscribers = new MessageQueueNotificationProviderBase<IrcMessageQueueMessage>(queue.ToString());
                 Log.Logger.Debug($"MQ Receiver Constructor");
             }
             catch (Exception ex)
@@ -96,13 +97,16 @@ namespace Irc.Infrastructure.Services.Queue
             try
             {
                 rc=_eventSubscribers.EventNotification(msg, FailOnException);
-                Log.Logger.Information($"HandleMessage({msg.Id}) => TRUE");
+                Log.Logger.Information($"HandleMessage({msg.Id}) => {rc}");
             }
             catch (Exception ex)
             {
-                Log.Logger.Error(ex, $"HandleMessage({msg.Id})");
+                Log.Logger.Error(ex, $"Error HandleMessage({msg.Id})");
                 if (FailOnException)
+                {
+                    Log.Logger.Error($"Forwarding exception for message {msg.Id}");
                     throw;
+                }
             }
 
             return rc;

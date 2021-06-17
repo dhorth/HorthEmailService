@@ -13,6 +13,9 @@ using Irc.Infrastructure.Services.Queue;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Horth.Service.Email.Shared.Service;
+using Horth.Service.Email.Service;
+using Horth.Service.Email.Shared.Configuration;
 
 namespace Horth.Service.Email
 {
@@ -31,7 +34,24 @@ namespace Horth.Service.Email
             services.AddDbContext<EmailServiceDbContext>(options => options.UseSqlite(AppSettings.ConnectionString));
             services.AddScoped<IEmailUnitOfWork, EmailUnitOfWork>();
 
-            services.ConfigureQueueServices(AppSettings);
+            services.AddSingleton<IIrcMessageQueueService, RabbitMessageQueueService>();
+            services.AddSingleton<IrcMessageQueueReceiver, RabbitMessageQueueReceiver>();
+
+            services.AddSingleton<IEmailService, EmailService>();
+            services.AddHostedService<EmailReceiver>();
+            services.AddSingleton<IPop3MailClient, Pop3MailClient>();
+            switch (AppSettings.EmailService)
+            {
+                case AppSettings.EmailServiceProvider.Aws:
+                    services.AddSingleton<ISendMessageService, AwsSendMail>();
+                    break;
+                case AppSettings.EmailServiceProvider.Smtp:
+                    services.AddSingleton<ISendMessageService, SmtpSendMail>();
+                    break;
+
+                default:
+                    throw new Exception("Configuration Exception");
+            }
             services.ConfigureSchedulerServices(AppSettings);
         }
 
@@ -39,7 +59,7 @@ namespace Horth.Service.Email
         {
             app.MigrateDbContext<EmailServiceDbContext>();
             app.MigrateDbContext<SchedulerServiceDbContext>();
-            app.MigrateDbContext<MessageQueueDbContext>();
+            //app.MigrateDbContext<MessageQueueDbContext>();
             base.Configure(app, env);
         }
 

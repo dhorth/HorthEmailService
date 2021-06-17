@@ -13,35 +13,6 @@ using Serilog;
 
 namespace Horth.Service.Email.Shared
 {
-    public static class WebHostHelper
-    {
-        public static IConfiguration GetConfiguration()
-        {
-            var env = "Production";
-#if DEBUG
-            env = "Development";
-#endif
-
-            if (File.Exists("appsettings.Shared.json"))
-                Log.Logger.Debug("Using appsettings.shared.json");
-
-            if (File.Exists($"appsettings.{env}.json"))
-                Log.Logger.Debug($"Using appsettings.{ env}.json");
-
-            if (File.Exists($"appsettings.Shared.{env}.json"))
-                Log.Logger.Debug($"Using appsettings.Shared.{ env}.json");
-
-            var builder = new ConfigurationBuilder()
-                //.SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile("appsettings.Shared.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.Shared.{env}.json", optional: true, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env}.json", optional: true, reloadOnChange: true)
-                .AddEnvironmentVariables();
-
-            return builder.Build();
-        }
-    }
     public static class WebHostExtensions
     {
         public static bool IsInKubernetes(this IWebHost webHost)
