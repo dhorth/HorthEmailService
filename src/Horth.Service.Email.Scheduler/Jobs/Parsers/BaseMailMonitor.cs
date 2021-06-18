@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Horth.Service.Email.Model;
+using Horth.Service.Email.Shared.Email;
 using Horth.Service.Email.Shared.MsgQueue;
 using Irc.Infrastructure.Services.Queue;
 using Serilog;
@@ -17,8 +18,22 @@ namespace OneOffice.Scheduler.Job.Email.Jobs.Parsers
         {
             _messageQueueService = messageQueueService;
         }
-        public abstract string Key { get; }
-        public abstract Task<int> ProcessMessage(OneOfficeMailMessage message);
+
+        public string MailboxName => Key.Subject;
+
+        protected abstract MonitorSubject Key { get; }
+        protected abstract Task<int> ProcessMessageInternal(int key, OneOfficeMailMessage message);
+        public async Task<int> ProcessMessage(OneOfficeMailMessage message)
+        {
+            var ret = -1;
+            if (message.Subject.Contains(Key.Subject))
+            {
+                var key = GetKey(message);
+                if (key > 0)
+                    ret = await ProcessMessageInternal(key, message);
+            }
+            return ret;
+        }
 
         public virtual void Retry()
         {
@@ -56,6 +71,19 @@ namespace OneOffice.Scheduler.Job.Email.Jobs.Parsers
         protected async Task Publish(IrcMessageQueueMessage obj)
         {
             await _messageQueueService.Publish(obj);
+        }
+
+        protected int GetKey(OneOfficeMailMessage message)
+        {
+            //parse the subject line for the id
+            var idx = message.Subject.IndexOf(Key.Subject.ToString()) + Key.ToString().Length - Key.Key.Length;
+            var idStr = message.Subject.Substring(idx).Trim();
+            if (!int.TryParse(idStr, out int id))
+            {
+                Log.Logger.Error("Unable to parse subject line {0}", message.Subject);
+                return -1;
+            }
+            return id;
         }
     }
 

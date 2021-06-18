@@ -1,19 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-using Horth.Service.Email.Queue.Model;
-using Horth.Service.Email.Shared.Configuration;
 using Horth.Service.Email.Shared.Email;
-using Horth.Service.Email.Shared.MsgQueue;
 using Horth.Service.Email.Shared.Service;
-using Horth.Shared.Infrastructure.Configuration;
 using Horth.Shared.Infrastructure.Console;
-using Horth.Shared.Infrastructure.Logger;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Serilog;
 
 namespace Horth.Service.Email.TestClient
@@ -75,7 +65,7 @@ namespace Horth.Service.Email.TestClient
             }
             email.EndTable();
             email.AddSignature("Test Team");
-            await email.Send("dhorth@horth.com", "", "Email Test Client");
+            await email.SendMonitoredEmail("dhorth@horth.com", "", MonitorSubjects.Legal(0));
 
 
             Log.Logger.Information("All done!  Press any key to exit");

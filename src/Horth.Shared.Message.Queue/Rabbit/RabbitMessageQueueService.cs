@@ -1,27 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using Horth.Service.Email.Shared.Configuration;
+﻿using Horth.Service.Email.Shared.Configuration;
 using Horth.Service.Email.Shared.Exceptions;
 using Horth.Service.Email.Shared.MsgQueue.Rabbit;
 using Irc.Infrastructure.Services.Queue;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using Serilog;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Horth.Service.Email.Shared.MsgQueue
 {
-
-
     public class RabbitMessageQueueService : IrcMessageQueueService, IDisposable
     {
-        RabbitQueueName queue;
+        private RabbitQueueName queue;
         protected IConnection MessageService;
+
         public RabbitMessageQueueService(AppSettings appSettings) : base(appSettings)
         {
         }
+
         protected override Task<bool> InitAsync(IrcMessageQueueMessage.MsgService queueName)
         {
             try
@@ -38,6 +37,7 @@ namespace Horth.Service.Email.Shared.MsgQueue
 
             return Task.FromResult(MessageService != null);
         }
+
         public override void Dispose()
         {
             if (MessageService != null)
@@ -61,7 +61,10 @@ namespace Horth.Service.Email.Shared.MsgQueue
                 channel.ExchangeDeclare(queue.WorkerExchange, "direct");
                 channel.QueueDeclare
                 (
-                    queue.WorkerQueue, true, false, false,
+                    queue: queue.WorkerQueue, 
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
                     new Dictionary<string, object>
                     {
                         {"x-dead-letter-exchange", queue.RetryExchange},
@@ -131,13 +134,14 @@ namespace Horth.Service.Email.Shared.MsgQueue
                     arguments: null);
 
                 var consumer = new DefaultBasicConsumer(channel);
-                while(true)
+                while (true)
                 {
                     try
                     {
                         var ea = channel.BasicGet(queue.RetryQueue, false);
                         if (ea == null)
                             break;
+                        Log.Logger.Debug($"Found dead letter");
                         var json = Encoding.UTF8.GetString(ea.Body.ToArray());
                         var msg = JsonConvert.DeserializeObject<IrcMessageQueueMessage>(json);
                         ret.Add(msg);

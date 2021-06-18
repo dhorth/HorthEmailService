@@ -19,7 +19,6 @@ namespace Horth.Service.Email.Service
         {
             try
             {
-                throw new NotImplementedException();
                 using var client = new SmtpClient();
 
                 client.Connect(AppSettings.SmtpServer, AppSettings.SmtpPort);

@@ -40,7 +40,7 @@ namespace Horth.Service.Email.Shared.Email
         void AddLinkButton(string title, string key, string href);
         void AddLinkButton(string title, int key, string href);
         void AddSignature(string team);
-        
+
         Task Send(string to, object mailMonitor, string v);
         Task<bool> Send(string to, string cc, string subject, string base64Data, string fileName);
         Task<bool> Send(List<string> to, List<string> cc, string subject, string attachment = "");
@@ -49,9 +49,11 @@ namespace Horth.Service.Email.Shared.Email
     [DebuggerDisplay("Text = {Text}")]
     public partial class EmailMessage
     {
+
         private readonly IEmailService _emailService;
         private readonly StringBuilder _sb;
 
+        #region styles
         private static string style_body = "style='font-family:sans-serif;font-size:14px;padding:10px 5px;word-break:normal;'";
         private static string style_table = "style='border-collapse:collapse;border-spacing:0;border-color:#999;'";
 
@@ -69,6 +71,8 @@ namespace Horth.Service.Email.Shared.Email
         //private string server => _appSettings.EmailImageServer;
         public const string styleWarning = "style = 'font-weight: bold;color: #cc5500;'";
         public const string styleDanger = "style = 'font-weight: bold;color: red;'";
+        #endregion
+
         private AppSettings _appSettings;
 
         public EmailMessage(IEmailService emailService, AppSettings appSettings)
@@ -91,6 +95,11 @@ namespace Horth.Service.Email.Shared.Email
         {
             AddHeader(_appSettings.EmailTitle, subtitle, caption);
         }
+        public void AddSectionHeader(string title)
+        {
+            _sb.Append(SectionHeader(title));
+        }
+
         public void AddLine()
         {
             _sb.Append("<hr/>");
@@ -127,6 +136,15 @@ namespace Horth.Service.Email.Shared.Email
 
             if (newLine)
                 _sb.Append("<br>");
+
+        }
+        public void AddHighlightBlock(string text)
+        {
+            var html = $"<br>" +
+                $"<span style = 'background-color:#1478b1;border:1px solid #444;border-radius:5px;color:#fff;padding:15px; display:inline-block;font-family:sans-serif;font-size:16px;font-weight: bold; text-align:center;text-decoration:none;width:600px;-webkit-text-size-adjust:none;mso-hide:all;' >" +
+                   $"{text}" +
+                   $"</span> <br>";
+            _sb.Append(html);
 
         }
 
@@ -228,40 +246,24 @@ namespace Horth.Service.Email.Shared.Email
             ReflectionHelper.SetPropertyValue(old, property, newValue);
             _sb.Append(log);
         }
-
         public void EndChangeTable()
         {
             _sb.Append($"</table>");
         }
-        public void AddSectionHeader(string title)
-        {
-            _sb.Append(SectionHeader(title));
-        }
 
-        public void AddHighlightBlock(string text)
-        {
-            var html = $"<br>" +
-                $"<span style = 'background-color:#1478b1;border:1px solid #444;border-radius:5px;color:#fff;padding:15px; display:inline-block;font-family:sans-serif;font-size:16px;font-weight: bold; text-align:center;text-decoration:none;width:600px;-webkit-text-size-adjust:none;mso-hide:all;' >" +
-                   $"{text}" +
-                   $"</span> <br>";
-            _sb.Append(html);
 
-        }
         public void AddColumn(string title, string data)
         {
             _sb.Append(Column(title, data));
         }
-
         public void AddColumn(string title, decimal? data)
         {
             _sb.Append(Column(title, data));
         }
-
         public void AddColumn(string title, DateTime? data)
         {
             _sb.Append(Column(title, data));
         }
-
         public void AddColumn(string title, bool? data)
         {
             _sb.Append(Column(title, data));
@@ -292,10 +294,6 @@ namespace Horth.Service.Email.Shared.Email
         //               $"</tr></table>");
         //}
 
-        public Task Send(string to, object mailMonitor, string v)
-        {
-            throw new NotImplementedException();
-        }
 
         public void AddSignature(string team)
         {
@@ -323,6 +321,13 @@ namespace Horth.Service.Email.Shared.Email
             return rc;
         }
 
+        public async Task<bool> SendMonitoredEmail(string to, string cc, MonitorSubject monitorSubject, string attachment = "")
+        {
+            bool rc = false;
+            rc = await _emailService.SendAsync(to, cc, monitorSubject.ToString(), _sb.ToString(), attachment);
+            return rc;
+        }
+
         private static string GetEmailHeader(string title, string subtitle, string caption)
         {
             var msg =
@@ -339,17 +344,6 @@ namespace Horth.Service.Email.Shared.Email
                     $"<h3>{title}</h3><h4>{subtitle}</h4></td></tr></table>" +
                     $"<hr /><br />";
 
-        }
-        private static string EmailSignature(string team)
-        {
-            var ret = "";
-            switch (team)
-            {
-                default:
-                    ret = EmailSignature(team.ToString(), "???", "???");
-                    break;
-            }
-            return ret;
         }
         private static string LinkButton(string title, int key, string href)
         {
@@ -386,6 +380,18 @@ namespace Horth.Service.Email.Shared.Email
         private static string ColumnValue(string data)
         {
             return $"<span>{data}</span>";
+        }
+
+        private static string EmailSignature(string team)
+        {
+            var ret = "";
+            switch (team)
+            {
+                default:
+                    ret = EmailSignature(team.ToString(), "???", "???");
+                    break;
+            }
+            return ret;
         }
         private static string EmailSignature(string teamMember, string phone, string email)
         {

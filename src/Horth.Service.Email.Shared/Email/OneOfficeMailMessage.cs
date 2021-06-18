@@ -44,7 +44,7 @@ namespace Horth.Service.Email.Model
 
         public ICollection<OneOfficeMailAttachment> Attachments { get; set; }
 
-        public string Addresses => string.Join(", ", To.ToArray()) + " CC: "+ string.Join(", ", Cc.ToArray()) + " BCC: " + string.Join(", ", Bcc.ToArray());
+        public string Addresses => string.Join(", ", To.ToArray()) + " CC: "+ string.Join(", ", Cc.ToArray());
     }
 
     public class OneOfficeMailAttachment

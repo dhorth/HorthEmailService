@@ -24,7 +24,7 @@ namespace Horth.Service.Email.Scheduler.Jobs
             IIrcMessageQueueService messageQueueService,
             ISchedulerResultUnitOfWork db,
             IEmailService email,
-            AppSettings appSettings) :base(appSettings,db)
+            AppSettings appSettings) : base(appSettings, db)
         {
             Log.Logger.Debug("Initializing Email Monitor Job");
             _messageQueueService = messageQueueService;
@@ -44,7 +44,7 @@ namespace Horth.Service.Email.Scheduler.Jobs
                 Results.Clear();
                 Results.AddRange(await _emailService.CheckMail());
                 Log.Logger.Information($"Found {Results.Count} Messages");
-                var i=1;
+                var i = 1;
                 foreach (var msg in Results)
                 {
                     Log.Logger.Information($"Processing {i} of {Results.Count} Messages");
@@ -67,18 +67,14 @@ namespace Horth.Service.Email.Scheduler.Jobs
             {
                 foreach (var mb in _mailBoxes)
                 {
-                    Log.Logger.Debug("Checking Mailbox  {0}", mb.Key);
-                    if (msg.Subject.Contains(mb.Key))
+                    Log.Logger.Debug($"Checking Mailbox  {mb.MailboxName}");
+                    try
                     {
-                        try
-                        {
-                            Log.Logger.Debug("Processing Message {0}", mb.Key);
-                            await mb.ProcessMessage(msg);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Logger.Error(ex, "");
-                        }
+                        await mb.ProcessMessage(msg);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Logger.Error(ex, $"Error checking mailbox {mb.MailboxName}");
                     }
                 }
                 Log.Logger.Debug("Done Processing Message");
